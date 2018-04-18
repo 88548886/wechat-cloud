@@ -1,4 +1,4 @@
-# wechat-cloud-client
+# wechat-cloud-common
 
 + 通迅协议栈通用依赖
 
