@@ -7,9 +7,13 @@
     <groupId>com.mjoys</groupId>
     <artifactId>wechat-cloud</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <modules>
         <module>wechat-cloud-common</module>
+        <module>wechat-cloud-client</module>
+        <module>wechat-cloud-server</module>
+        <module>wechat-cloud-server-discovery</module>
+        <module>wechat-cloud-task-manager</module>
     </modules>
 
     <name>wechat-cloud</name>

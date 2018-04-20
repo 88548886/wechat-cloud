@@ -13,7 +13,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class CustomClientInboundHandlerAdapter extends SimpleChannelInboundHandler<Message> {
@@ -38,7 +37,7 @@ public class CustomClientInboundHandlerAdapter extends SimpleChannelInboundHandl
             IdleStateEvent event = (IdleStateEvent) evt;
             if (event.state() == IdleState.WRITER_IDLE) {
                 Message heartbeatMsg = new Message(MessageFlag.MESSAGE_FLAG_SYS.getCode(),
-                        MessageType.MESSAGE_TYPE_SYS_HEARTBEAT.getCode(),
+                        MessageType.SYS_HEARTBEAT.getCode(),
                         JSON.toJSONString(new Heartbeat("wxid1", "protrait")));
                 ctx.channel().writeAndFlush(heartbeatMsg);
 
@@ -68,6 +67,7 @@ public class CustomClientInboundHandlerAdapter extends SimpleChannelInboundHandl
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message message) throws Exception {
         System.out.println("[ Client ] received : " + ctx.channel().remoteAddress() + " send -> " + message.getBody());
+        //TODO 处理command
     }
 
     @Override

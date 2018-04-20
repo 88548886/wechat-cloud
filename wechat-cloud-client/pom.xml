@@ -48,7 +48,7 @@
         <dependency>
             <groupId>com.mjoys</groupId>
             <artifactId>wechat-cloud-common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>[0.0.1,)</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
