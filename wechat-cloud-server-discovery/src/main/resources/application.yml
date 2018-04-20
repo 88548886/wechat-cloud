@@ -1,2 +1,10 @@
+spring:
+  application:
+    name: wxchat-cloud-server-discovery
 server:
     port: 8999
+logging:
+  file: logs/${spring.application.name}.log
+  level:
+    root: error
+    com.mjoys: info

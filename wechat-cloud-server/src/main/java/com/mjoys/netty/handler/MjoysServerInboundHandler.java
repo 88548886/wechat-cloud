@@ -37,17 +37,19 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-        log.info("[ Server ] 收到心跳 " + ctx.channel().localAddress() + " received : " + ctx.channel()
-                .remoteAddress() + " -> " + msg.getBody());
+        log.info("[ Server ] " + ctx.channel().localAddress() + " received : " + ctx.channel()
+                .remoteAddress() + " -> " + MessageFlag.build(msg.getFlag()) + MessageType.build(msg.getType()) + msg
+                .getBody());
         switch (MessageFlag.build(msg.getFlag())) {
             case MESSAGE_FLAG_SYS:
                 processSysMsg(ctx, msg);
                 break;
             case MESSAGE_FLAG_REP:
-
+                break;
             case MESSAGE_FLAG_COM:
                 break;
             default:
+                break;
         }
     }
 
@@ -57,6 +59,12 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
             case SYS_HEARTBEAT:
                 redisService.set(String.format(HEARTBEAT_CACHE_FORMATTER, ctx.channel().hashCode()),
                         String.valueOf(System.currentTimeMillis()), 30, TimeUnit.MINUTES);
+                channelGroup.writeAndFlush(new Message(MessageFlag.MESSAGE_FLAG_COM.getCode(),
+                        MessageType.COM_ADD_WECHAT_FRIEND.getCode(),
+                        JSON.toJSONString(new WehcatAddFriendRequest(1,
+                                "wxfriend",
+                                "我是上海证券通的小刘,可以加好友吗?"))));
+                break;
             case SYS_TASK:
                 TaskRequest taskRequest = JSON.parseObject(msg.getBody(), TaskRequest.class);
                 //TODO 处理任务的分发
@@ -67,6 +75,9 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
                                         taskRequest.getTarget(),
                                         taskRequest.getMessage()))),
                         new MjoysChannelMatcher(taskRequest.getChannelHashCode()));
+                break;
+            default:
+                break;
         }
     }
 

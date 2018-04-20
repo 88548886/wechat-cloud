@@ -16,13 +16,11 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
 
 @Slf4j
-@Component
 public class Server {
 
     public void start(int port) throws InterruptedException {
@@ -57,7 +55,7 @@ public class Server {
 
                     }).option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
             ChannelFuture future = sbs.bind(port).sync();
-            log.info("Server start listen at " + port);
+            log.info("服务启动成功,监听端口" + port);
             future.channel().closeFuture().sync();
         } catch (Exception e) {
             bossGroup.shutdownGracefully();
