@@ -4,50 +4,41 @@ package com.mjoys.protocol;
 public class Message {
 
     private int flag;
-
     private int type;
-
-    private int length;
 
     private String body;
 
-    public Message(int flag,int type, int length, String body) {
-        this.type = type;
+    public Message(int flag, int type, String body) {
         this.flag = flag;
-        this.length = length;
-        this.body = body;
-    }
-
-    public int getType() {
-        return type;
-    }
-
-    public void setType(int type) {
         this.type = type;
+        this.body = body;
     }
 
     public int getFlag() {
         return flag;
     }
 
-    public void setFlag(int flag) {
+    public Message setFlag(int flag) {
         this.flag = flag;
+        return this;
     }
 
-    public int getLength() {
-        return length;
+    public int getType() {
+        return type;
     }
 
-    public void setLength(int length) {
-        this.length = length;
+    public Message setType(int type) {
+        this.type = type;
+        return this;
     }
+
 
     public String getBody() {
         return body;
     }
 
-    public void setBody(String body) {
+    public Message setBody(String body) {
         this.body = body;
+        return this;
     }
-
 }

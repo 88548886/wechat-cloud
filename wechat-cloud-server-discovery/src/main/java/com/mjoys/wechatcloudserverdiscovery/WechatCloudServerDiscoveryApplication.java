@@ -14,6 +14,6 @@ public class WechatCloudServerDiscoveryApplication {
 	}
 	@GetMapping("/discovery")
 	public  String discovery(){
-		return "[{\"host:\":\"192.168.1.28\",\"port:\":\"5001\"},{\"host:\":\"192.168.1.28\",\"port:\":\"5001\"}]";
+		return "[{\"host\":\"192.168.1.28\",\"port\":8888}]";
 	}
 }

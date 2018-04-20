@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.1.196:3306?useOldAliasMetadataBehavior=true
+    username: mjoys_test
+    password: 123456
+    driver-class-name: com.mysql.jdbc.Driver
+  jpa:
+    show-sql: true
+  redis:
+    host: 192.168.1.113
+    port: 7379

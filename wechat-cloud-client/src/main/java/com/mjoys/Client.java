@@ -1,27 +1,43 @@
 package com.mjoys;
 
-import com.mjoys.decoder.CustomLengthFieldBasedFrameDecoder;
-import com.mjoys.encoder.CustomOutboundEncoder;
-import com.mjoys.handler.CustomClientInboundHandlerAdapter;
-import com.mjoys.listener.ConnectionListener;
-import com.mjoys.protocol.Constant;
+import com.mjoys.netty.decoder.CustomLengthFieldBasedFrameDecoder;
+import com.mjoys.netty.encoder.CustomOutboundEncoder;
+import com.mjoys.netty.handler.CustomClientInboundHandlerAdapter;
+import com.mjoys.protocol.Message;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
+import com.mjoys.netty.listener.ConnectionListener;
 
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 public class Client {
     private String host;
     private int port;
+    private Channel channel;
+    private final AtomicInteger retryTimes = new AtomicInteger();
+    private int maxRetryTimes;
 
-    public void start(String host, int port) {
+    public Client start(String host, int port,int maxRetryTimes) {
         this.host = host;
         this.port = port;
-        createBootstrap(new Bootstrap(), new NioEventLoopGroup());
+        this.maxRetryTimes = maxRetryTimes;
+        this.createBootstrap(new Bootstrap(), new NioEventLoopGroup());
+        return this;
+    }
+
+    public Client setHost(String host) {
+        this.host = host;
+        return this;
+    }
+
+    public Client setPort(int port) {
+        this.port = port;
+        return this;
     }
 
     public Bootstrap createBootstrap(Bootstrap bootstrap, EventLoopGroup eventLoop) {
@@ -37,7 +53,8 @@ public class Client {
                 @Override
                 protected void initChannel(SocketChannel socketChannel) throws Exception {
 
-                    socketChannel.pipeline().addLast(new IdleStateHandler(0, 4, 0, TimeUnit.SECONDS));
+                    socketChannel.pipeline().addLast(new IdleStateHandler(0, Constant.CHANNLE_IDLE_IIME, 0, Constant
+                            .CHANNLE_IDLE_TIME_UNIT));
                     socketChannel.pipeline().addLast(new CustomOutboundEncoder());
                     socketChannel.pipeline().addLast(new CustomLengthFieldBasedFrameDecoder(
                             Constant.MAX_FRAME_LENGTH,
@@ -50,8 +67,15 @@ public class Client {
                 }
             });
             bootstrap.remoteAddress(host, port);
-            bootstrap.connect().addListener(new ConnectionListener(this));
+            ChannelFuture channelFuture = bootstrap.connect();
+            channelFuture.addListener(new ConnectionListener(this, maxRetryTimes,retryTimes));
+            this.channel = channelFuture.channel();
         }
         return bootstrap;
+    }
+
+    public Client send(Message msg) {
+        channel.writeAndFlush(msg);
+        return this;
     }
 }
