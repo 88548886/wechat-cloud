@@ -1,3 +1,7 @@
 .idea
 *.iml
-/target
+target/
+wechat-cloud-common/target/
+wechat-cloud-server/target/
+wechat-cloud-server-discovery\/target/
+wechat-cloud-task-manager/target/
