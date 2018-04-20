@@ -37,12 +37,16 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-
+        log.info("[ Server ] 收到心跳 " + ctx.channel().localAddress() + " received : " + ctx.channel()
+                .remoteAddress() + " -> " + msg.getBody());
         switch (MessageFlag.build(msg.getFlag())) {
             case MESSAGE_FLAG_SYS:
                 processSysMsg(ctx, msg);
-//            case MESSAGE_FLAG_BUS:
-//                processBussinessMsg(ctx, msg);
+                break;
+            case MESSAGE_FLAG_REP:
+
+            case MESSAGE_FLAG_COM:
+                break;
             default:
         }
     }
@@ -50,19 +54,15 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
     private void processSysMsg(ChannelHandlerContext ctx, Message msg) {
         //TODO 是心跳包,在缓存中刷新心跳时间
         switch (MessageType.build(msg.getType())) {
-            case MESSAGE_TYPE_SYS_HEARTBEAT:
-                log.info("[ Server ] 收到心跳 " + ctx.channel().localAddress() + " received : " + ctx.channel()
-                        .remoteAddress() + " -> " + msg.getBody());
+            case SYS_HEARTBEAT:
                 redisService.set(String.format(HEARTBEAT_CACHE_FORMATTER, ctx.channel().hashCode()),
                         String.valueOf(System.currentTimeMillis()), 30, TimeUnit.MINUTES);
-            case MESSAGE_TYPE_SYS_TASK:
-                log.info("[ Server ] 收到任务包 " + ctx.channel().localAddress() + " received : " + ctx.channel()
-                        .remoteAddress() + " -> " + msg.getBody());
+            case SYS_TASK:
                 TaskRequest taskRequest = JSON.parseObject(msg.getBody(), TaskRequest.class);
                 //TODO 处理任务的分发
                 //TODO 读在线用户的缓存,随机选择C端(wx/mobile)
-                channelGroup.writeAndFlush(new Message(MessageFlag.MESSAGE_FLAG_BUS.getCode(),
-                                MessageType.MESSAGE_TYPE_BUS_ADD_FRIEND_REQUEST.getCode(),
+                channelGroup.writeAndFlush(new Message(MessageFlag.MESSAGE_FLAG_COM.getCode(),
+                                MessageType.COM_ADD_WECHAT_FRIEND.getCode(),
                                 JSON.toJSONString(new WehcatAddFriendRequest(taskRequest.getId(),
                                         taskRequest.getTarget(),
                                         taskRequest.getMessage()))),
@@ -83,31 +83,6 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
         }
     }
 
-/*
-    private void processBussinessMsg(ChannelHandlerContext ctx, Message msg) {
-        switch (MessageType.build(msg.getType())) {
-            case MESSAGE_TYPE_BUS_LOGIN_REQUEST:
-                LoginRequest loginRequest = JSON.parseObject(msg.getBody(), LoginRequest.class);
-                List<Account> allAccount = accountService.findAll();
-                boolean isExist = false;
-                for (Account account : allAccount) {
-                    if (account.getAccountId().equals(loginRequest.getUid())) {
-                        isExist = true;
-                        break;
-                    }
-                }
-                if (isExist) {
-                    LoginRespone loginResponseMsg = new LoginRespone("successful");
-                    ctx.writeAndFlush(new Message(MessageFlag.MESSAGE_FLAG_BUS.getCode(),
-                            MessageType.MESSAGE_TYPE_BUS_LOGIN_RESPONSE.getCode(),
-                            JSON.toJSONString(loginResponseMsg)));
-                } else {
-                    ctx.channel().close();
-                }
-            default:
-        }
-    }
-    */
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
