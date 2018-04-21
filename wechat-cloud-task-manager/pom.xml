@@ -63,7 +63,7 @@
 		<dependency>
 			<groupId>com.mjoys</groupId>
 			<artifactId>wechat-cloud-client</artifactId>
-			<version>[0.0.1,)</version>
+			<version>0.0.1</version>
 		</dependency>
 
 		<dependency>
