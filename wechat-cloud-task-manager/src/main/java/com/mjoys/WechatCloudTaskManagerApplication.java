@@ -17,6 +17,7 @@ public class WechatCloudTaskManagerApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(WechatCloudTaskManagerApplication.class, args);
 		ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-		scheduledExecutorService.scheduleAtFixedRate(new TaskManager(),0,1, TimeUnit.MINUTES);
+//		scheduledExecutorService.scheduleAtFixedRate(new TaskManager(),0,1, TimeUnit.MINUTES);
+		new Thread(new TaskManager()).start();
 	}
 }

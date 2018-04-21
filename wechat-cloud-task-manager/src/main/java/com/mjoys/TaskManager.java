@@ -28,14 +28,14 @@ public class TaskManager implements Runnable {
     public TaskManager() {
         Map<String, String> serversCacheMap = redisService.hgetAll("wechat-cloud:servers");
         if (null != serversCacheMap && serversCacheMap.size() > 0) {
-            for(Map.Entry<String, String> entry:serversCacheMap.entrySet()){
+            for (Map.Entry<String, String> entry : serversCacheMap.entrySet()) {
                 long latest = Long.parseLong(entry.getValue());
-                //server节点最后的刷新时间在10秒内则有效
 //                if ((System.currentTimeMillis() - latest) < TimeUnit.SECONDS.toMillis(10)) {
                     String[] hostPort = entry.getKey().split(":");
                     Client client = new Client().start(hostPort[0], Integer.parseInt(hostPort[1]), "System",
                             "default", 300);
                     clientGroup.put(entry.getKey(), client);
+//                }
 //                }
             }
         }
@@ -57,21 +57,21 @@ public class TaskManager implements Runnable {
                 String[] terminalAddrSplit = terminalAddr.split(":");
                 String terminalUid = terminalAddrSplit[0];
                 String terminalIp = terminalAddrSplit[1];
-                String terminalPort = terminalAddrSplit[1];
+                String terminalPort = terminalAddrSplit[2];
 
                 String serverIpPort = redisService.hget("wechat-cloud:client:server", terminalUid);
                 System.out.println("serverIpPort:" + serverIpPort);
                 System.out.println(clientGroup.containsKey(serverIpPort));
                 Client client = clientGroup.get(serverIpPort);
-                Message message = new Message(MessageFlag.MESSAGE_FLAG_SYS.getCode(), MessageType.SYS_TASK.getCode(),
+                Message message = new Message(MessageFlag.MESSAGE_FLAG_SYS.getCode(), MessageType.SYS_TASK
+                        .getCode(),
                         JSON.toJSONString(new com.mjoys.protocol.message.system.Task().
                                 setCommandType(MessageType.COM_ADD_WECHAT_FRIEND.getCode()).
                                 setExecuteTime(-1).
                                 setId(task.getId()).
                                 setReceiver(task.getTargerAccount()).
-                                setTerminalAddr(String.format("%s:%d", terminalIp, terminalPort)).
+                                setTerminalAddr(String.format("%s:%s", terminalIp, terminalPort)).
                                 setBussinessId(0).setMessage(task.getMessage())));
-                System.out.println(message);
                 client.send(message);
                 System.out.println("send" + message);
             } else if (MessageType.COM_SEND_MSG.getCode() == task.getOperate()) {
