@@ -2,7 +2,7 @@ spring:
   application:
     name: wxchat-cloud-task-manager
   datasource:
-    url: jdbc:mysql://192.168.1.113:3306?useOldAliasMetadataBehavior=true&useSSL=false
+    url: jdbc:mysql://192.168.1.111:3306?useOldAliasMetadataBehavior=true&useSSL=false
     username: robot
     password: robot@8UHB
     driver-class-name: com.mysql.jdbc.Driver
