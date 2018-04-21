@@ -3,8 +3,8 @@ package com.mjoys.protocol.message.report;
 
 
 public class SendSmsMsgReport extends Report {
-    public static final int RESULT_SEND_SUCCESSED = 0;
-    public static final int RESULT_SEND_FAILURE = 1;
+    public static final int RESULT_SEND_SUCCESSED = 1;
+    public static final int RESULT_SEND_FAILURE = 4;
     public int commandId;
     public int result;
 

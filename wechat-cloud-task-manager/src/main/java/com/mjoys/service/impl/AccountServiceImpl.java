@@ -21,6 +21,6 @@ public class AccountServiceImpl implements IAccountService {
 
     @Override
     public List<Account> findByUserId(String userId) {
-        return accountRepository.findByUserId(userId);
+        return accountRepository.findByUserIdAndStatus(userId, 1);
     }
 }

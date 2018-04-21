@@ -30,7 +30,7 @@ public class Account {
     private String groupId;
 
     @Column(name = "business_id")
-    private int bussinessId;
+    private Integer bussinessId;
 
     private Integer status;
 

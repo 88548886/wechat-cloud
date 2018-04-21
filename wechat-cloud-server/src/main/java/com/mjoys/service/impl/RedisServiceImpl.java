@@ -21,7 +21,7 @@ public class RedisServiceImpl implements IRedisService {
     @Override
     public void set(String key, String value, long expireTime, TimeUnit expireTimeUnit) {
         ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
-        valueOperations.set(key, value, expireTime, expireTimeUnit);
+        valueOperations.set(key, value);
     }
 
     @Override

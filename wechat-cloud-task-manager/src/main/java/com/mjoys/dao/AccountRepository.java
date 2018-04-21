@@ -12,5 +12,5 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     List<Account> findByUserIdAndBussinessId(@Param(value = "userId") String userId, @Param(value = "bussinessId")
             int bussinessId);
 
-    List<Account> findByUserId(@Param(value = "userId") String userId);
+    List<Account> findByUserIdAndStatus(@Param(value = "userId") String userId,@Param(value = "status") int status);
 }
