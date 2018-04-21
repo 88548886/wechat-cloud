@@ -1,6 +1,8 @@
 package com.mjoys.service;
 
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -22,5 +24,7 @@ public interface IRedisService {
 
     String hget(String key, String hashKey);
 
-    Map<String,String> hgetAll(String key);
+    Map<String, String> hgetAll(String key);
+
+    List<String> multiGet(String key, Collection<String> hashKeys);
 }

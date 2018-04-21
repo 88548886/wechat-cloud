@@ -8,6 +8,10 @@ public class Task extends MessageBody {
      */
     private int id;
     /**
+     * 执行时间
+     */
+    private long executeTime;
+    /**
      * 标识一个客户
      */
     private int userId;
@@ -49,7 +53,14 @@ public class Task extends MessageBody {
         return this;
     }
 
+    public long getExecuteTime() {
+        return executeTime;
+    }
 
+    public Task setExecuteTime(long executeTime) {
+        this.executeTime = executeTime;
+        return this;
+    }
 
     public int getBussinessId() {
         return bussinessId;

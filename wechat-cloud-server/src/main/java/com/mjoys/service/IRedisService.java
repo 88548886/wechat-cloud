@@ -21,9 +21,10 @@ public interface IRedisService {
 
     void hset(String key, String hashKey, String value);
 
-    List<String> hget(String key, Collection<String> hashKeys);
 
     String hget(String key, String hashKey);
 
     Map<String, String> hgetAll(String key);
+
+    List<String> multiGet(String key, Collection<String> hashKeys);
 }

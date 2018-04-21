@@ -5,7 +5,7 @@ package com.mjoys.protocol.message.system;
  */
 public class CommandReceivedAck {
     private int commandId;
-    private int terminalUid;
+    private String terminalUid;
 
     public int getCommandId() {
         return commandId;
@@ -16,11 +16,11 @@ public class CommandReceivedAck {
         return this;
     }
 
-    public int getTerminalUid() {
+    public String getTerminalUid() {
         return terminalUid;
     }
 
-    public CommandReceivedAck setTerminalUid(int terminalUid) {
+    public CommandReceivedAck setTerminalUid(String terminalUid) {
         this.terminalUid = terminalUid;
         return this;
     }

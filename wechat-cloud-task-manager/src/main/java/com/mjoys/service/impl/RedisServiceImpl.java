@@ -7,6 +7,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -30,18 +32,24 @@ public class RedisServiceImpl implements IRedisService {
     @Override
     public void hset(String key, String hashKey, String value, long expireTime, TimeUnit expireTimeUnit) {
         HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
-        opsForHash.putIfAbsent(key, hashKey, value);
+        opsForHash.put(key, hashKey, value);
         redisTemplate.expire(key, expireTime, expireTimeUnit);
     }
     @Override
     public void hset(String key, String hashKey, String value) {
         HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
-        opsForHash.putIfAbsent(key, hashKey, value);
+        opsForHash.put(key, hashKey, value);
     }
     @Override
     public String hget(String key, String hashKey) {
         HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
         return opsForHash.get(key, hashKey);
+    }
+
+    @Override
+    public List<String> multiGet(String key, Collection<String> hashKeys) {
+        HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
+        return opsForHash.multiGet(key, hashKeys);
     }
     @Override
     public Map<String,String> hgetAll(String key) {

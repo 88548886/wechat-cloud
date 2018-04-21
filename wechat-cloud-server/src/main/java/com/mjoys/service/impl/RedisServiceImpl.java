@@ -47,7 +47,7 @@ public class RedisServiceImpl implements IRedisService {
     }
 
     @Override
-    public List<String> hget(String key, Collection<String> hashKeys) {
+    public List<String> multiGet(String key, Collection<String> hashKeys) {
         HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
         return opsForHash.multiGet(key, hashKeys);
     }
