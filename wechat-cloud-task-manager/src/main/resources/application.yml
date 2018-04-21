@@ -1,8 +1,8 @@
 spring:
   application:
-    name: wxchat-cloud-server
+    name: wxchat-cloud-task-manager
   datasource:
-    url: jdbc:mysql://192.168.1.196:3306?useOldAliasMetadataBehavior=true&useSSL=false
+    url: jdbc:mysql://192.168.1.196:3306?useOldAliasMetadataBehavior=true
     username: mjoys_test
     password: 123456
     driver-class-name: com.mysql.jdbc.Driver
@@ -14,5 +14,5 @@ spring:
 logging:
   file: logs/${spring.application.name}.log
   level:
-    root: error
-    com.mjoys: info
+    root: debug
+    com.mjoys: debug

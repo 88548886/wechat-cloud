@@ -9,33 +9,11 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
+    <groupId>com.mjoys</groupId>
     <artifactId>wechat-cloud-common</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.8</version>
     <name>wechat-cloud-common</name>
     <url>http://www.mjoys.com</url>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-    </properties>
-
-    <dependencies>
-    </dependencies>
-
-    <distributionManagement>
-        <repository>
-            <id>mjoys-Nexus</id>
-            <url>http://lib.mjoys.com/nexus/content/repositories/releases/</url>
-        </repository>
-    </distributionManagement>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
+    <packaging>jar</packaging>
 
 </project>

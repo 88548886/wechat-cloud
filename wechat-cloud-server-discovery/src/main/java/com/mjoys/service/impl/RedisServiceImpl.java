@@ -30,13 +30,13 @@ public class RedisServiceImpl implements IRedisService {
     @Override
     public void hset(String key, String hashKey, String value, long expireTime, TimeUnit expireTimeUnit) {
         HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
-        opsForHash.putIfAbsent(key, hashKey, value);
+        opsForHash.put(key, hashKey, value);
         redisTemplate.expire(key, expireTime, expireTimeUnit);
     }
     @Override
     public void hset(String key, String hashKey, String value) {
         HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
-        opsForHash.putIfAbsent(key, hashKey, value);
+        opsForHash.put(key, hashKey, value);
     }
     @Override
     public String hget(String key, String hashKey) {

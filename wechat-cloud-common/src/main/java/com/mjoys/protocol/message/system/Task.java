@@ -30,7 +30,7 @@ public class Task extends MessageBody {
     /**
      * 标识一个执行的终端在缓存的hash
      */
-    private int channelHashCode;
+    private String terminalAddr;
     /**
      * 标识一个被执行者
      */
@@ -96,12 +96,12 @@ public class Task extends MessageBody {
         return this;
     }
 
-    public int getChannelHashCode() {
-        return channelHashCode;
+    public String getTerminalAddr() {
+        return terminalAddr;
     }
 
-    public Task setChannelHashCode(int channelHashCode) {
-        this.channelHashCode = channelHashCode;
+    public Task setTerminalAddr(String terminalAddr) {
+        this.terminalAddr = terminalAddr;
         return this;
     }
 

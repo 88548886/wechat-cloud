@@ -1,16 +1,24 @@
 package com.mjoys.netty.handler;
 
 import com.alibaba.fastjson.JSON;
-import com.mjoys.Constant;
+import com.mjoys.SystemConstant;
+
 import com.mjoys.protocol.Message;
 import com.mjoys.protocol.MessageFlag;
 import com.mjoys.protocol.MessageType;
-import com.mjoys.protocol.message.business.TaskRequest;
-import com.mjoys.protocol.message.business.WehcatAddFriendRequest;
+import com.mjoys.protocol.message.command.WechatAddFriendCommand;
+import com.mjoys.protocol.message.report.SendSmsMsgReport;
+import com.mjoys.protocol.message.report.WechatAddFriendReport;
+import com.mjoys.protocol.message.system.CommandExecutedAck;
+import com.mjoys.protocol.message.system.CommandReceivedAck;
+import com.mjoys.protocol.message.system.Heartbeat;
+import com.mjoys.protocol.message.system.Task;
 import com.mjoys.service.IAccountService;
 import com.mjoys.service.IRedisService;
+import com.mjoys.service.ITaskService;
 import com.mjoys.service.impl.AccountServiceImpl;
 import com.mjoys.service.impl.RedisServiceImpl;
+import com.mjoys.service.impl.TaskServiceImpl;
 import com.mjoys.utils.SpringBeanUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -23,6 +31,8 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
 
 
@@ -30,23 +40,41 @@ import java.util.concurrent.TimeUnit;
 public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Message> {
 
     private IRedisService redisService = SpringBeanUtil.getBean(RedisServiceImpl.class);
-    private IAccountService accountService = SpringBeanUtil.getBean(AccountServiceImpl.class);
+    private ITaskService taskService = SpringBeanUtil.getBean(TaskServiceImpl.class);
 
     public static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-    private static final String HEARTBEAT_CACHE_FORMATTER = "heartbeat:%s";
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-        log.info("[ Server ] " + ctx.channel().localAddress() + " received : " + ctx.channel()
-                .remoteAddress() + " -> " + MessageFlag.build(msg.getFlag()) + MessageType.build(msg.getType()) + msg
+
+        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+        log.info("[ Server ] received : " + remoteAddress.getHostName() + remoteAddress.getPort() + " -> (" +
+                MessageFlag.build(msg.getFlag()) + "\t" + MessageType.build(msg.getType()) + "\t" + msg
                 .getBody());
         switch (MessageFlag.build(msg.getFlag())) {
             case MESSAGE_FLAG_SYS:
                 processSysMsg(ctx, msg);
                 break;
             case MESSAGE_FLAG_REP:
+                processBusRep(ctx, msg);
                 break;
             case MESSAGE_FLAG_COM:
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void processBusRep(ChannelHandlerContext ctx, Message msg) {
+        switch (MessageType.build(msg.getType())) {
+            case REP_ADD_WECHAT_FRIEND:
+                WechatAddFriendReport wechatAddFriendReport = JSON.parseObject(msg.getBody(), WechatAddFriendReport
+                        .class);
+                taskService.updateTaskResult(wechatAddFriendReport.getCommandId(), wechatAddFriendReport.getResult());
+                break;
+            case REP_SEND_MSG:
+                SendSmsMsgReport sendSmsMsgReport = JSON.parseObject(msg.getBody(), SendSmsMsgReport.class);
+                taskService.updateTaskResult(sendSmsMsgReport.getCommandId(), sendSmsMsgReport.getResult());
                 break;
             default:
                 break;
@@ -57,24 +85,33 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
         //TODO 是心跳包,在缓存中刷新心跳时间
         switch (MessageType.build(msg.getType())) {
             case SYS_HEARTBEAT:
-                redisService.set(String.format(HEARTBEAT_CACHE_FORMATTER, ctx.channel().hashCode()),
-                        String.valueOf(System.currentTimeMillis()), 30, TimeUnit.MINUTES);
-                channelGroup.writeAndFlush(new Message(MessageFlag.MESSAGE_FLAG_COM.getCode(),
-                        MessageType.COM_ADD_WECHAT_FRIEND.getCode(),
-                        JSON.toJSONString(new WehcatAddFriendRequest(1,
-                                "wxfriend",
-                                "我是上海证券通的小刘,可以加好友吗?"))));
+                Heartbeat heartbeat = JSON.parseObject(msg.getBody(), Heartbeat.class);
+                InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+                redisService.hset(String.format("wechat-cloud:client:addr"), heartbeat.getUid(),
+                        String.format("%s:%s:%d", heartbeat.getUid(), SystemConstant.ip, SystemConstant.port), 1,
+                        TimeUnit.DAYS);
+                redisService.set(String.format("wechat-cloud:client:heartbeat:%s:%d",
+                        remoteAddress.getHostName(), remoteAddress.getPort()), String.valueOf(System
+                        .currentTimeMillis()), 10, TimeUnit.MINUTES);
                 break;
             case SYS_TASK:
-                TaskRequest taskRequest = JSON.parseObject(msg.getBody(), TaskRequest.class);
+                Task task = JSON.parseObject(msg.getBody(), Task.class);
                 //TODO 处理任务的分发
                 //TODO 读在线用户的缓存,随机选择C端(wx/mobile)
                 channelGroup.writeAndFlush(new Message(MessageFlag.MESSAGE_FLAG_COM.getCode(),
                                 MessageType.COM_ADD_WECHAT_FRIEND.getCode(),
-                                JSON.toJSONString(new WehcatAddFriendRequest(taskRequest.getId(),
-                                        taskRequest.getTarget(),
-                                        taskRequest.getMessage()))),
-                        new MjoysChannelMatcher(taskRequest.getChannelHashCode()));
+                                JSON.toJSONString(new WechatAddFriendCommand(task.getId(),
+                                        task.getReceiver(),
+                                        task.getMessage()))),
+                        new MjoysChannelMatcher(task.getTerminalAddr()));
+                break;
+            case SYS_COMMAND_RECEIVED_ACK:
+                CommandReceivedAck commandReceivedAck = JSON.parseObject(msg.getBody(), CommandReceivedAck.class);
+                taskService.markTaskAsSubmitted(commandReceivedAck.getCommandId());
+                break;
+            case SYS_COMMAND_EXECUTED_ACK:
+                CommandExecutedAck commandExecutedAck = JSON.parseObject(msg.getBody(), CommandExecutedAck.class);
+                taskService.markTaskAsExecuted(commandExecutedAck.getCommandId());
                 break;
             default:
                 break;
@@ -82,15 +119,19 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
     }
 
     class MjoysChannelMatcher implements ChannelMatcher {
-        private int hashCode;
+        private String addr;
 
-        public MjoysChannelMatcher(int hashCode) {
-            this.hashCode = hashCode;
+        public MjoysChannelMatcher(String addr) {
+            this.addr = addr;
         }
 
         @Override
         public boolean matches(Channel channel) {
-            return channel.hashCode() == this.hashCode;
+            InetSocketAddress remoteAddress = (InetSocketAddress) channel.remoteAddress();
+            if (addr.equals(String.format("%s:%d", remoteAddress.getHostName(), remoteAddress.getPort()))) {
+                return true;
+            }
+            return false;
         }
     }
 
@@ -101,13 +142,13 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
             if (event.state() == IdleState.READER_IDLE) {
-                log.info(Constant.CHANNLE_IDLE_IIME + "秒没有接收到客户端的信息了");
-                String leastHeartBeartTimestamp = redisService.get(String.format(HEARTBEAT_CACHE_FORMATTER, ctx
-                        .channel().hashCode()));
-                //TODO 连续闲置CHANNLE_IDLE_IIME * 5则断开连接
+                log.debug(SystemConstant.CHANNLE_IDLE_IIME + "secend not receive message from ");
+                InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+                String leastHeartBeartTimestamp = redisService.get(String.format("wechat-cloud:client:heartbeat:%s:%d",
+                        remoteAddress.getHostName(), remoteAddress.getPort()));
                 if ((System.currentTimeMillis() - Long.valueOf(leastHeartBeartTimestamp))
-                        > (Constant.CHANNLE_IDLE_TIME_UNIT.toMillis(Constant.CHANNLE_IDLE_IIME) * 5)) {
-                    log.info("关闭这个不活跃的channel");
+                        > (SystemConstant.CHANNLE_IDLE_TIME_UNIT.toMillis(SystemConstant.CHANNLE_IDLE_IIME) * 5)) {
+                    log.debug("close " + remoteAddress.getHostName() + ":" + remoteAddress.getPort());
                     ctx.channel().close();
                 }
             }
@@ -140,7 +181,6 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
-        log.error("exceptionCaught");
         ctx.close();
     }
 }

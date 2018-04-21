@@ -29,8 +29,6 @@ public class Account {
     @Column(name = "group_id")
     private String groupId;
 
-    @Column(name = "business_id")
-    private String businessId;
 
     private Integer status;
 

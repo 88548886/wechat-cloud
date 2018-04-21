@@ -26,10 +26,18 @@ public class Task {
     @Column(name = "group_id")
     private String groupId;
 
+    @Column(name = "business_id")
+    private String businessId;
+
     private Integer operate;
 
-    @Column(name = "targer_account")
+    @Column(name = "wx_account_id")
+    private String wxAccountId;
+
+    @Column(name = "target_account")
     private String targerAccount;
+
+    private String message;
 
     @Column(name = "action_submit_status")
     private Integer actionSubmitStatus;
@@ -49,4 +57,20 @@ public class Task {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "time_modified", insertable = true, updatable = true)
     private Date timeModified = new Date();
+
+    //动作下发状态：0-未提交 1-成功；2-失败
+    public static final int ACTION_SUBMIT_STATUS_NOT_SUBMIT = 0;
+    public static final int ACTION_SUBMIT_STATUS_SUCCESSED = 1;
+    public static final int ACTION_SUBMIT_STATUS_FAILURE = 2;
+
+    //动作执行状态：0-未知 1-成功；2-失败
+    public static final int ACTION_EXECUTION_STATUS_UNKNOWN = 0;
+    public static final int ACTION_EXECUTION_STATUS_SUCCESSED = 1;
+    public static final int ACTION_EXECUTION_STATUS_FAILURE = 2;
+
+    //动作执行结果：0-未知 1-成功；2-失败
+    public static final int ACTION_RESULT_STATUS_UNKNOWN = 0;
+    public static final int ACTION_RESULT_STATUS_SUCCESSED = 1;
+    public static final int ACTION_RESULT_STATUS_FAILURE = 2;
+
 }

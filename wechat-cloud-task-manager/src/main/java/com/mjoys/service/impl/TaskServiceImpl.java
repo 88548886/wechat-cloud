@@ -8,15 +8,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service("taskService")
-public class TaskServiceImpl implements ITaskService{
+@Service
+public class TaskServiceImpl implements ITaskService {
     @Autowired
     private TaskRepository taskRepository;
+
     @Override
-    public void findAll() {
-        List<Task> all = taskRepository.findAll();
-        for (Task task : all){
-            System.out.println(task);
-        }
+    public List<Task> findAllByActionSubmitStatus(int actionSubmitStatus) {
+        return taskRepository.findAllByActionSubmitStatus(actionSubmitStatus);
     }
 }

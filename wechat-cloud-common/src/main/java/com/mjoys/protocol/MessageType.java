@@ -5,6 +5,8 @@ public enum MessageType {
     /*系统心跳*/
     SYS_HEARTBEAT(0),
     SYS_TASK(1),
+    SYS_COMMAND_RECEIVED_ACK(2),
+    SYS_COMMAND_EXECUTED_ACK(3),
 
     /*手机发短信*/
     COM_SEND_MSG(10021),

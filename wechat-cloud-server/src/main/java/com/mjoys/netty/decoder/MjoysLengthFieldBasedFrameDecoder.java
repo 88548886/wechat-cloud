@@ -29,7 +29,6 @@ public class MjoysLengthFieldBasedFrameDecoder extends LengthFieldBasedFrameDeco
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        log.info("CustomDecoder -> decode() ");
         if (in == null) {
             return null;
         }
@@ -40,7 +39,7 @@ public class MjoysLengthFieldBasedFrameDecoder extends LengthFieldBasedFrameDeco
         int type = in.readInt();
         int length = in.readInt();
         if (in.readableBytes() < length) {
-            throw new Exception("body长度是" + length + "但实现比较小");
+            throw new Exception("body长度不正确");
         }
         ByteBuf buf = in.readBytes(length);
         byte[] req = new byte[buf.readableBytes()];

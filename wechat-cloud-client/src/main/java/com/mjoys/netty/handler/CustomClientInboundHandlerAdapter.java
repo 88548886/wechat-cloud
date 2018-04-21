@@ -73,5 +73,6 @@ public class CustomClientInboundHandlerAdapter extends SimpleChannelInboundHandl
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         System.out.println("[ Client ] exceptionCaught ");
+        cause.printStackTrace();
     }
 }
