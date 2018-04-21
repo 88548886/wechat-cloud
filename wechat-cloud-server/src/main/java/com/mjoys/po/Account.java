@@ -20,15 +20,17 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
+    @Column(name = "wx_account_id")
+    private String wechatAccountId;
+
     @Column(name = "user_id")
     private String userId;
-
-    @Column(name = "wx_account_id")
-    private String accountId;
 
     @Column(name = "group_id")
     private String groupId;
 
+    @Column(name = "business_id")
+    private String bussinessId;
 
     private Integer status;
 

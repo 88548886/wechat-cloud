@@ -17,8 +17,8 @@ public class MjoysOutboundEncoder extends MessageToByteEncoder<Message> {
         }
         String body = msg.getBody();
         byte[] bodyBytes = body.getBytes(Charset.forName("UTF-8"));
-        out.writeInt(msg.getType());
         out.writeInt(msg.getFlag());
+        out.writeInt(msg.getType());
         out.writeInt(bodyBytes.length);
         out.writeBytes(bodyBytes);
     }

@@ -6,6 +6,7 @@ import com.mjoys.SystemConstant;
 import com.mjoys.protocol.Message;
 import com.mjoys.protocol.MessageFlag;
 import com.mjoys.protocol.MessageType;
+import com.mjoys.protocol.message.command.SendSmsMsgCommand;
 import com.mjoys.protocol.message.command.WechatAddFriendCommand;
 import com.mjoys.protocol.message.report.SendSmsMsgReport;
 import com.mjoys.protocol.message.report.WechatAddFriendReport;
@@ -48,7 +49,7 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
 
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        log.info("[ Server ] received : " + remoteAddress.getHostName() + remoteAddress.getPort() + " -> (" +
+        log.debug("[ Server ] received : " + remoteAddress.getHostName() + remoteAddress.getPort() + " -> (" +
                 MessageFlag.build(msg.getFlag()) + "\t" + MessageType.build(msg.getType()) + "\t" + msg
                 .getBody());
         switch (MessageFlag.build(msg.getFlag())) {
@@ -88,6 +89,9 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
                 Heartbeat heartbeat = JSON.parseObject(msg.getBody(), Heartbeat.class);
                 InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
                 redisService.hset(String.format("wechat-cloud:client:addr"), heartbeat.getUid(),
+                        String.format("%s:%s:%d", heartbeat.getUid(), remoteAddress.getHostName(), remoteAddress.getPort()), 1,
+                        TimeUnit.DAYS);
+                redisService.hset(String.format("wechat-cloud:client:server"), heartbeat.getUid(),
                         String.format("%s:%s:%d", heartbeat.getUid(), SystemConstant.ip, SystemConstant.port), 1,
                         TimeUnit.DAYS);
                 redisService.set(String.format("wechat-cloud:client:heartbeat:%s:%d",
@@ -95,15 +99,7 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
                         .currentTimeMillis()), 10, TimeUnit.MINUTES);
                 break;
             case SYS_TASK:
-                Task task = JSON.parseObject(msg.getBody(), Task.class);
-                //TODO 处理任务的分发
-                //TODO 读在线用户的缓存,随机选择C端(wx/mobile)
-                channelGroup.writeAndFlush(new Message(MessageFlag.MESSAGE_FLAG_COM.getCode(),
-                                MessageType.COM_ADD_WECHAT_FRIEND.getCode(),
-                                JSON.toJSONString(new WechatAddFriendCommand(task.getId(),
-                                        task.getReceiver(),
-                                        task.getMessage()))),
-                        new MjoysChannelMatcher(task.getTerminalAddr()));
+                processTask(msg);
                 break;
             case SYS_COMMAND_RECEIVED_ACK:
                 CommandReceivedAck commandReceivedAck = JSON.parseObject(msg.getBody(), CommandReceivedAck.class);
@@ -118,6 +114,36 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
         }
     }
 
+    private void processTask(Message msg) {
+        log.info("dist task :" + msg.getBody());
+        Task task = JSON.parseObject(msg.getBody(), Task.class);
+        //TODO 处理任务的分发
+        //TODO 读在线用户的缓存,随机选择C端(wx/mobile)
+        Message command=null;
+        switch (MessageType.build(task.getCommandType())) {
+            case COM_ADD_WECHAT_FRIEND:
+                command = new Message(MessageFlag.MESSAGE_FLAG_COM.getCode(),
+                        MessageType.COM_ADD_WECHAT_FRIEND.getCode(),
+                        JSON.toJSONString(new WechatAddFriendCommand(task.getId(),
+                                task.getExecuteTime(),
+                                task.getReceiver(),
+                                task.getMessage())));
+                break;
+            case COM_SEND_MSG:
+                command = new Message(MessageFlag.MESSAGE_FLAG_COM.getCode(),
+                        MessageType.COM_SEND_MSG.getCode(),
+                        JSON.toJSONString(new SendSmsMsgCommand(task.getId(),
+                                task.getExecuteTime(),
+                                task.getReceiver(),
+                                task.getMessage())));
+                break;
+            default:
+                break;
+        }
+        System.out.println("转发指令" + command.getFlag() + "\t" + command.getType() + "\t" + command.getBody());
+        channelGroup.writeAndFlush(command, new MjoysChannelMatcher(task.getTerminalAddr()));
+    }
+
     class MjoysChannelMatcher implements ChannelMatcher {
         private String addr;
 
@@ -127,8 +153,10 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
 
         @Override
         public boolean matches(Channel channel) {
+            log.info("dist task match:");
             InetSocketAddress remoteAddress = (InetSocketAddress) channel.remoteAddress();
             if (addr.equals(String.format("%s:%d", remoteAddress.getHostName(), remoteAddress.getPort()))) {
+                log.info("dist task match true");
                 return true;
             }
             return false;
