@@ -5,11 +5,11 @@
 
 	<groupId>com.mjoys</groupId>
 	<artifactId>wechat-cloud-task-manager</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<packaging>jar</packaging>
 
 	<name>wechat-cloud-task-manager</name>
-	<description>Demo project for Spring Boot</description>
+	<description>wechat-cloud-task-manager</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
