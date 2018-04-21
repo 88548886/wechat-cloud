@@ -92,7 +92,7 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
                         String.format("%s:%s:%d", heartbeat.getUid(), remoteAddress.getHostName(), remoteAddress.getPort()), 1,
                         TimeUnit.DAYS);
                 redisService.hset(String.format("wechat-cloud:client:server"), heartbeat.getUid(),
-                        String.format("%s:%s:%d", heartbeat.getUid(), SystemConstant.ip, SystemConstant.port), 1,
+                        String.format("%s:%d", SystemConstant.ip, SystemConstant.port), 1,
                         TimeUnit.DAYS);
                 redisService.set(String.format("wechat-cloud:client:heartbeat:%s:%d",
                         remoteAddress.getHostName(), remoteAddress.getPort()), String.valueOf(System
