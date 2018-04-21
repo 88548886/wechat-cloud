@@ -2,9 +2,9 @@ spring:
   application:
     name: wxchat-cloud-server
   datasource:
-    url: jdbc:mysql://192.168.1.196:3306?useOldAliasMetadataBehavior=true&useSSL=false
-    username: mjoys_test
-    password: 123456
+    url: jdbc:mysql://192.168.1.111:3306?useOldAliasMetadataBehavior=true&useSSL=false
+    username: robot
+    password: robot@8UHB
     driver-class-name: com.mysql.jdbc.Driver
   jpa:
     show-sql: true

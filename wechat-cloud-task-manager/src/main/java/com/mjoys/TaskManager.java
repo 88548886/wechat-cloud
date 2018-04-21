@@ -28,16 +28,16 @@ public class TaskManager implements Runnable {
     public TaskManager() {
         Map<String, String> serversCacheMap = redisService.hgetAll("wechat-cloud:servers");
         if (null != serversCacheMap && serversCacheMap.size() > 0) {
-            serversCacheMap.forEach((k, v) -> {
-                long latest = Long.parseLong(v);
+            for(Map.Entry<String, String> entry:serversCacheMap.entrySet()){
+                long latest = Long.parseLong(entry.getValue());
                 //server节点最后的刷新时间在10秒内则有效
-                if ((System.currentTimeMillis() - latest) < TimeUnit.SECONDS.toMillis(10)) {
-                    String[] hostPort = k.split(":");
+//                if ((System.currentTimeMillis() - latest) < TimeUnit.SECONDS.toMillis(10)) {
+                    String[] hostPort = entry.getKey().split(":");
                     Client client = new Client().start(hostPort[0], Integer.parseInt(hostPort[1]), "System",
                             "default", 300);
-                    clientGroup.put(k, client);
-                }
-            });
+                    clientGroup.put(entry.getKey(), client);
+//                }
+            }
         }
     }
 
@@ -46,31 +46,34 @@ public class TaskManager implements Runnable {
         List<Task> tasks = taskService.findAllByActionSubmitStatus(Task
                 .ACTION_SUBMIT_STATUS_NOT_SUBMIT);
         for (Task task : tasks) {
-            List<Account> wechatTermianls = accountService.findByUserIdAndBussinessId(task.getUserId(), task
-                    .getBusinessId());
+            System.out.println("任务" + task.getId() + "\t" + task.getOperate());
+            List<Account> wechatTermianls = accountService.findByUserId(task.getUserId());
             List<String> hashKeys = new ArrayList<>();
-            if (MessageType.COM_ADD_WECHAT_FRIEND.getCode() == task.getOperate()) {
+            if (MessageType.COM_ADD_WECHAT_FRIEND.getCode() == task.getOperate().intValue()) {
                 wechatTermianls.forEach(i -> hashKeys.add(i.getWechatAccountId()));
                 List<String> wechatTermianlAddr = redisService.multiGet("wechat-cloud:client:addr", hashKeys);
-                Random rand = new Random();
-                String terminalAddr = wechatTermianlAddr.get(rand.nextInt(wechatTermianlAddr.size() - 1));
+                String terminalAddr = wechatTermianlAddr.get(0);
+                System.out.println("terminalAddr:" + terminalAddr);
                 String[] terminalAddrSplit = terminalAddr.split(":");
                 String terminalUid = terminalAddrSplit[0];
                 String terminalIp = terminalAddrSplit[1];
                 String terminalPort = terminalAddrSplit[1];
 
                 String serverIpPort = redisService.hget("wechat-cloud:client:server", terminalUid);
-
+                System.out.println("serverIpPort:" + serverIpPort);
+                System.out.println(clientGroup.containsKey(serverIpPort));
                 Client client = clientGroup.get(serverIpPort);
-                client.send(new Message(MessageFlag.MESSAGE_FLAG_SYS.getCode(), MessageType.SYS_TASK.getCode(),
+                Message message = new Message(MessageFlag.MESSAGE_FLAG_SYS.getCode(), MessageType.SYS_TASK.getCode(),
                         JSON.toJSONString(new com.mjoys.protocol.message.system.Task().
                                 setCommandType(MessageType.COM_ADD_WECHAT_FRIEND.getCode()).
                                 setExecuteTime(-1).
                                 setId(task.getId()).
                                 setReceiver(task.getTargerAccount()).
                                 setTerminalAddr(String.format("%s:%d", terminalIp, terminalPort)).
-                                setBussinessId(0).setMessage(task.getMessage())
-                        )));
+                                setBussinessId(0).setMessage(task.getMessage())));
+                System.out.println(message);
+                client.send(message);
+                System.out.println("send" + message);
             } else if (MessageType.COM_SEND_MSG.getCode() == task.getOperate()) {
                 Map<String, String> terminals = redisService.hgetAll("wechat-cloud:client:addr");
                 Set<Map.Entry<String, String>> entries = terminals.entrySet();
@@ -82,8 +85,7 @@ public class TaskManager implements Runnable {
                         msgTermianlAddr.add(next.getValue());
                     }
                 }
-                Random rand = new Random();
-                String terminalAddr = msgTermianlAddr.get(rand.nextInt(msgTermianlAddr.size() - 1));
+                String terminalAddr = msgTermianlAddr.get(0);
                 String[] terminalAddrSplit = terminalAddr.split(":");
                 String terminalUid = terminalAddrSplit[0];
                 String terminalIp = terminalAddrSplit[1];

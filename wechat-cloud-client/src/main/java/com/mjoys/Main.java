@@ -14,10 +14,10 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) {
         try {
-            Client client = new Client().start("192.168.1.28", 8888, "System", "default", 300);
+            Client client = new Client().start("192.168.1.210", 9999, "System", "default", 300);
             //TODO 发送一个报文
             Thread.sleep(1000);
-            /*client.send(new Message(MessageFlag.MESSAGE_FLAG_SYS.getCode(), MessageType.SYS_TASK.getCode(),
+            client.send(new Message(MessageFlag.MESSAGE_FLAG_SYS.getCode(), MessageType.SYS_TASK.getCode(),
                     JSON.toJSONString(new Task().
                             setCommandType(MessageType.COM_ADD_WECHAT_FRIEND.getCode()).
                             setExecuteTime(-1).
@@ -25,7 +25,7 @@ public class Main {
                             .setReceiver("88548886")
                             .setTerminalAddr("192.168.1.117:36646")
                             .setBussinessId(0).setMessage("我是上海证券通")
-                    )));*/
+                    )));
 
 //            client.send(new Message(MessageFlag.MESSAGE_FLAG_SYS.getCode(), MessageType.SYS_TASK.getCode(),
 //                    JSON.toJSONString(new Task().
@@ -36,7 +36,7 @@ public class Main {
 //                            .setTerminalAddr("192.168.1.189:41383")
 //                            .setBussinessId(0).setMessage("我是英启教育")
 //                    )));
-            client.stop();
+//            client.stop();
         } catch (Exception e) {
             e.printStackTrace();
         }
