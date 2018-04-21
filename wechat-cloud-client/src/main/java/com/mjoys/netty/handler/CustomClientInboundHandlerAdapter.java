@@ -38,7 +38,7 @@ public class CustomClientInboundHandlerAdapter extends SimpleChannelInboundHandl
             if (event.state() == IdleState.WRITER_IDLE) {
                 Message heartbeatMsg = new Message(MessageFlag.MESSAGE_FLAG_SYS.getCode(),
                         MessageType.SYS_HEARTBEAT.getCode(),
-                        JSON.toJSONString(new Heartbeat("wxid1", "protrait")));
+                        JSON.toJSONString(new Heartbeat(client.getTerminalUid(), client.getProtrait())));
                 ctx.channel().writeAndFlush(heartbeatMsg);
 
             }
@@ -49,7 +49,6 @@ public class CustomClientInboundHandlerAdapter extends SimpleChannelInboundHandl
     @Override
 
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("channelInactive");
         final EventLoop eventLoop = ctx.channel().eventLoop();
         eventLoop.schedule(new Runnable() {
             @Override
@@ -67,7 +66,6 @@ public class CustomClientInboundHandlerAdapter extends SimpleChannelInboundHandl
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message message) throws Exception {
         System.out.println("[ Client ] received : " + ctx.channel().remoteAddress() + " send -> " + message.getBody());
-        //TODO 处理command
     }
 
     @Override

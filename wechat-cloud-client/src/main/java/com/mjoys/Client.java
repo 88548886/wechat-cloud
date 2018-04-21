@@ -18,19 +18,36 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Client {
     private Channel channel;
+    private String terminalUid;
+    private String protrait;
     private final AtomicInteger retryTimes = new AtomicInteger();
     private int maxRetryTimes;
+    private EventLoopGroup eventLoop;
+    private String serverIp;
+    private int serverPort;
 
-    public Client start(int maxRetryTimes) {
+    public Client start(String serverIp, int serverPort, String terminalUid, String protrait, int maxRetryTimes) {
+        this.serverIp = serverIp;
+        this.serverPort = serverPort;
+        this.terminalUid = terminalUid;
+        this.protrait = protrait;
         this.maxRetryTimes = maxRetryTimes;
         this.createBootstrap(new Bootstrap(), new NioEventLoopGroup());
         return this;
     }
 
+    public String getTerminalUid() {
+        return terminalUid;
+    }
+
+    public String getProtrait() {
+        return protrait;
+    }
+
+
     public Bootstrap createBootstrap(Bootstrap bootstrap, EventLoopGroup eventLoop) {
         if (bootstrap != null) {
             try {
-                ServerNode serverNode = Server.random();
                 CustomClientInboundHandlerAdapter handler = new CustomClientInboundHandlerAdapter(this);
                 bootstrap.group(eventLoop);
 
@@ -55,15 +72,22 @@ public class Client {
                         socketChannel.pipeline().addLast(handler);
                     }
                 });
-                bootstrap.remoteAddress(serverNode.getHost(), serverNode.getPort());
+                bootstrap.remoteAddress(serverIp, serverPort);
                 ChannelFuture channelFuture = bootstrap.connect();
-                channelFuture.addListener(new ConnectionListener(this, maxRetryTimes,retryTimes));
+                channelFuture.addListener(new ConnectionListener(this, maxRetryTimes, retryTimes));
                 this.channel = channelFuture.channel();
+                this.eventLoop = eventLoop;
             } catch (Exception e) {
 
             }
         }
         return bootstrap;
+    }
+
+    public void stop() {
+        if (null != eventLoop) {
+            eventLoop.shutdownGracefully();
+        }
     }
 
     public Client send(Message msg) {

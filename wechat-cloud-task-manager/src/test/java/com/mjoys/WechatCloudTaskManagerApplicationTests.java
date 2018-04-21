@@ -26,13 +26,13 @@ public class WechatCloudTaskManagerApplicationTests {
     public void testTaskService() {
         List<Task> allByActionSubmitStatus = taskService.findAllByActionSubmitStatus(Task
                 .ACTION_SUBMIT_STATUS_NOT_SUBMIT);
-        allByActionSubmitStatus.forEach(i -> System.out.println(i));
+        allByActionSubmitStatus.forEach(i -> System.out.println(i.getId()));
     }
 
     @Test
     public void testAccountService() {
-        List<Account> mjoysAccount = accountService.findByUserId("mjoys");
-        mjoysAccount.forEach(i -> System.out.print(i));
+        List<Account> mjoysAccount = accountService.findByUserIdAndBussinessId("mjoys", 0);
+        mjoysAccount.forEach(i -> System.out.println(i.getBussinessId() + "i" + i.getUserId()));
 
     }
 }

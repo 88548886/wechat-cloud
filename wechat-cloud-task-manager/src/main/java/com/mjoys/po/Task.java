@@ -27,7 +27,7 @@ public class Task {
     private String groupId;
 
     @Column(name = "business_id")
-    private String businessId;
+    private int businessId;
 
     private Integer operate;
 
@@ -68,9 +68,11 @@ public class Task {
     public static final int ACTION_EXECUTION_STATUS_SUCCESSED = 1;
     public static final int ACTION_EXECUTION_STATUS_FAILURE = 2;
 
-    //动作执行结果：0-未知 1-成功；2-失败
+    //动作执行结果：0-未知 1-添加成功；2-微信账户不存在；3-被限制;4-添加失败(拒绝)
     public static final int ACTION_RESULT_STATUS_UNKNOWN = 0;
     public static final int ACTION_RESULT_STATUS_SUCCESSED = 1;
-    public static final int ACTION_RESULT_STATUS_FAILURE = 2;
+    public static final int ACTION_RESULT_STATUS_WECHAT_ACCOUNT_NOT_EXISTS = 2;
+    public static final int ACTION_RESULT_STATUS_LIMITED = 3;
+    public static final int ACTION_RESULT_STATUS_REFUSED = 4;
 
 }

@@ -43,5 +43,5 @@ if [ ! -d "logs/wechat-cloud-server" ]; then
   mkdir logs/wechat-cloud-server
 fi
 
-nohup java -jar  wechat-cloud-server/target/wechat-cloud-server-0.0.1.jar  > logs/wechat-cloud-server/startup-`date +%Y-%m-%d`.log 2>&1 &
+nohup java -jar -Dip=$ip -Dport=$port  wechat-cloud-server/target/wechat-cloud-server-0.0.1.jar  > logs/wechat-cloud-server/startup-`date +%Y-%m-%d`.log 2>&1 &
 echo wechat-cloud-server start successed.

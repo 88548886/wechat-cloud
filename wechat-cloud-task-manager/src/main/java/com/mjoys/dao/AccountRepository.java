@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface AccountRepository extends JpaRepository<Account, Integer> {
 
-    List<Account> findAllByUserId(@Param(value = "userId") String userId);
+    List<Account> findByUserIdAndBussinessId(@Param(value = "userId") String userId,@Param(value = "bussinessId") int bussinessId);
 }
