@@ -17,5 +17,5 @@ if [ ! -d "logs/wechat-cloud-task-manager" ]; then
   mkdir logs/wechat-cloud-task-manager
 fi
 
-nohup java -jar  wechat-cloud-server-discovery/target/wechat-cloud-task-manager-0.0.1.jar  > logs/wechat-cloud-task-manager/startup-`date +%Y-%m-%d`.log 2>&1 &
+nohup java -jar  wechat-cloud-task-manager/target/wechat-cloud-task-manager-0.0.1.jar  > logs/wechat-cloud-task-manager/startup-`date +%Y-%m-%d`.log 2>&1 &
 echo wechat-cloud-task-manager start successed.
