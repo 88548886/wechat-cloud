@@ -26,13 +26,11 @@ public class CustomClientInboundHandlerAdapter extends SimpleChannelInboundHandl
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("channelActive");
     }
 
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        //写闲置发心跳包
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
             if (event.state() == IdleState.WRITER_IDLE) {
@@ -40,7 +38,6 @@ public class CustomClientInboundHandlerAdapter extends SimpleChannelInboundHandl
                         MessageType.SYS_HEARTBEAT.getCode(),
                         JSON.toJSONString(new Heartbeat(client.getTerminalUid(), client.getProtrait())));
                 ctx.channel().writeAndFlush(heartbeatMsg);
-
             }
         }
     }
@@ -49,6 +46,7 @@ public class CustomClientInboundHandlerAdapter extends SimpleChannelInboundHandl
     @Override
 
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("channelInactive");
         final EventLoop eventLoop = ctx.channel().eventLoop();
         eventLoop.schedule(new Runnable() {
             @Override
@@ -71,6 +69,7 @@ public class CustomClientInboundHandlerAdapter extends SimpleChannelInboundHandl
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         System.out.println("[ Client ] exceptionCaught ");
+        ctx.close();
         cause.printStackTrace();
     }
 }

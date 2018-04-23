@@ -11,7 +11,6 @@ public interface IRedisService {
 
     String get(String key);
 
-
     void delete(String key);
 
     long incr(String key, long expireTime, TimeUnit expireTimeUnit);
@@ -19,8 +18,11 @@ public interface IRedisService {
 
     void hset(String key, String hashKey, String value, long expireTime, TimeUnit expireTimeUnit);
 
-    void hset(String key, String hashKey, String value);
+    void hsetAll(String key, Map<String, String> keyValuePairs, long expireTime, TimeUnit expireTimeUnit);
 
+    void hsetAll(String key, Map<String, String> keyValuePairs);
+
+    void hset(String key, String hashKey, String value);
 
     String hget(String key, String hashKey);
 

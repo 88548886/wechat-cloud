@@ -36,7 +36,7 @@ public class Main {
 //                            .setTerminalAddr("192.168.1.189:41383")
 //                            .setBussinessId(0).setMessage("我是英启教育")
 //                    )));
-            client.stop();
+//            client.stop();
         } catch (Exception e) {
             e.printStackTrace();
         }

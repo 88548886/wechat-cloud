@@ -35,6 +35,19 @@ public class RedisServiceImpl implements IRedisService {
         opsForHash.put(key, hashKey, value);
         redisTemplate.expire(key, expireTime, expireTimeUnit);
     }
+
+    @Override
+    public void hsetAll(String key, Map<String,String> keyValuePairs, long expireTime, TimeUnit expireTimeUnit) {
+        HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
+        opsForHash.putAll(key,keyValuePairs);
+        redisTemplate.expire(key, expireTime, expireTimeUnit);
+    }
+    @Override
+    public void hsetAll(String key, Map<String,String> keyValuePairs) {
+        HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
+        opsForHash.putAll(key,keyValuePairs);
+    }
+
     @Override
     public void hset(String key, String hashKey, String value) {
         HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();

@@ -27,12 +27,11 @@ public class CustomLengthFieldBasedFrameDecoder extends LengthFieldBasedFrameDec
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        System.out.println("CustomDecoder -> decode() ");
         if (in == null) {
             return null;
         }
         if (in.readableBytes() < HEADER_SIZE) {
-            throw new Exception("可读信息段比头部信息都小，你在逗我？");
+            throw new Exception("readable bytes length less than header size");
         }
 
         //注意在读的过程中，readIndex的指针也在移动
@@ -40,7 +39,7 @@ public class CustomLengthFieldBasedFrameDecoder extends LengthFieldBasedFrameDec
         int type = in.readInt();
         int length = in.readInt();
         if (in.readableBytes() < length) {
-            throw new Exception("body字段你告诉我长度是" + length + ",但是真实情况是没有这么多，你又逗我？");
+            throw new Exception("body length less than length declared in header");
         }
         ByteBuf buf = in.readBytes(length);
         byte[] req = new byte[buf.readableBytes()];
