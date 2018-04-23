@@ -116,15 +116,17 @@ public class TaskManager implements Runnable {
             Random rand = new Random();
             for (String addr : wechatTerminalAddrs) {
                 String targetTerminal = wechatTerminalAddrs.get(rand.nextInt(wechatTerminalAddrs.size()));
-                String[] addrDetail = targetTerminal.split(":");
-                //eg.  wxid1:192.168.1.28:40378:1524460570696
-                String terminalUid = addrDetail[0];
-                String ip = addrDetail[1];
-                int port = Integer.parseInt(addrDetail[2]);
-                long heartbeatTs = Long.parseLong(addrDetail[3]);
-                //如果超过30s
-                if (System.currentTimeMillis() - heartbeatTs < TimeUnit.SECONDS.toMillis(30)) {
-                    return new Terminal.Addr().setIp(ip).setPort(port);
+                if(null != targetTerminal && !"".equals(targetTerminal)){
+                    String[] addrDetail = targetTerminal.split(":");
+                    //eg.  wxid1:192.168.1.28:40378:1524460570696
+                    String terminalUid = addrDetail[0];
+                    String ip = addrDetail[1];
+                    int port = Integer.parseInt(addrDetail[2]);
+                    long heartbeatTs = Long.parseLong(addrDetail[3]);
+                    //如果超过30s
+                    if (System.currentTimeMillis() - heartbeatTs < TimeUnit.SECONDS.toMillis(30)) {
+                        return new Terminal.Addr().setIp(ip).setPort(port);
+                    }
                 }
             }
         }
