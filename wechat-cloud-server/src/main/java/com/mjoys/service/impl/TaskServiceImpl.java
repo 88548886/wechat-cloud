@@ -51,4 +51,10 @@ public class TaskServiceImpl implements ITaskService {
             taskRepository.save(task);
         }
     }
+
+
+    @Override
+    public List<Task> findAllByActionSubmitStatus(int actionSubmitStatus) {
+        return taskRepository.findAllByActionSubmitStatus(actionSubmitStatus);
+    }
 }

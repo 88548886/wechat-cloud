@@ -28,13 +28,16 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class Server {
-
+    private TaskManager taskManager;
+    private MjoysServerInboundHandler serverInboundHandler;
     private IRedisService redisService = SpringBeanUtil.getBean(RedisServiceImpl.class);
 
     public void start(int port) throws InterruptedException {
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
-        ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
+        ScheduledExecutorService es = Executors.newScheduledThreadPool(2);
+        taskManager = new TaskManager();
+        serverInboundHandler = new MjoysServerInboundHandler(taskManager);
         try {
             ServerBootstrap sbs = new ServerBootstrap()
                     .group(bossGroup, workerGroup)
@@ -59,19 +62,28 @@ public class Server {
                                     SystemConstant.LENGTH_ADJUSTMENT,
                                     SystemConstant.INITIAL_BYTES_TO_STRIP,
                                     false));
-                            ch.pipeline().addLast(new MjoysServerInboundHandler());
+                            ch.pipeline().addLast(serverInboundHandler);
                         }
 
                     }).option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
             ChannelFuture future = sbs.bind(port).sync();
             es.scheduleAtFixedRate(new Register(), 0, 1, TimeUnit.SECONDS);
+            es.submit(taskManager);
             log.info("服务启动成功,监听端口" + port);
             future.channel().closeFuture().sync();
         } catch (Exception e) {
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
-            es.shutdown();
+
         }
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                bossGroup.shutdownGracefully();
+                workerGroup.shutdownGracefully();
+                es.shutdown();
+                taskManager.stop();
+                serverInboundHandler.stop();
+            }
+        });
     }
 
     class Register implements Runnable {

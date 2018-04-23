@@ -24,7 +24,6 @@ public class ConnectionListener implements ChannelFutureListener {
 
     @Override
     public void operationComplete(ChannelFuture channelFuture) throws Exception {
-        System.out.println("operationComplete");
         if (!channelFuture.isSuccess()) {
             if (retryTimes.incrementAndGet() <= maxRetryTimes) {
                 final EventLoop loop = channelFuture.channel().eventLoop();

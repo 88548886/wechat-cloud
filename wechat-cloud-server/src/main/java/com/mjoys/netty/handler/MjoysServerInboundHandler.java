@@ -1,8 +1,11 @@
 package com.mjoys.netty.handler;
 
 import com.alibaba.fastjson.JSON;
+import com.mjoys.MessageWarp;
 import com.mjoys.SystemConstant;
 
+import com.mjoys.TaskManager;
+import com.mjoys.Terminal;
 import com.mjoys.protocol.Message;
 import com.mjoys.protocol.MessageFlag;
 import com.mjoys.protocol.MessageType;
@@ -46,10 +49,32 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
     private ITaskService taskService = SpringBeanUtil.getBean(TaskServiceImpl.class);
 
     public static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+    private TaskManager taskManager;
+    private boolean isStop;
+
+    public MjoysServerInboundHandler(TaskManager taskManager) {
+        this.taskManager = taskManager;
+        this.isStop = false;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!isStop) {
+                    MessageWarp messageWarpWaitingProcess = taskManager.getTask();
+                    if (null != messageWarpWaitingProcess) {
+                        System.out.println("消费到?" + messageWarpWaitingProcess);
+                        Terminal.Addr terminalAddr = messageWarpWaitingProcess.getTerminalAddr();
+                        channelGroup.writeAndFlush(messageWarpWaitingProcess.getMsg(),
+                                new MjoysChannelMatcher(String.format("%s:%d",
+                                        terminalAddr.getIp(),
+                                        terminalAddr.getPort())));
+                    }
+                }
+            }
+        }).start();
+    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-
 
         switch (MessageFlag.build(msg.getFlag())) {
             case MESSAGE_FLAG_SYS:
@@ -110,7 +135,7 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
                 redisService.hsetAll(String.format("wechat-cloud:client"), keyValuePairs);
                 break;
             case SYS_TASK:
-                processTask(msg);
+//                processTask(msg);
                 break;
             case SYS_COMMAND_RECEIVED_ACK:
                 CommandReceivedAck commandReceivedAck = JSON.parseObject(msg.getBody(), CommandReceivedAck.class);
@@ -124,6 +149,7 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
                 break;
         }
     }
+/*
 
     private void processTask(Message msg) {
         Task task = JSON.parseObject(msg.getBody(), Task.class);
@@ -152,6 +178,7 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
                 ()) + "\t" + command.getBody());
         channelGroup.writeAndFlush(command, new MjoysChannelMatcher(task.getTerminalAddr()));
     }
+*/
 
     class MjoysChannelMatcher implements ChannelMatcher {
         private String addr;
@@ -201,7 +228,7 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         channelGroup.add(ctx.channel());
-        log.info("handlerAdded channle group removed " + remoteAddress.getHostName() + "\t" + remoteAddress.getPort());
+        log.info("[ Server ] channle group removed " + remoteAddress.getHostName() + "\t" + remoteAddress.getPort());
 
         redisService.hset(String.format("wechat-cloud:client"), String.format("heartbeat-%s-%d", remoteAddress
                 .getHostName(), remoteAddress.getPort
@@ -212,7 +239,7 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         channelGroup.remove(ctx.channel());
-        log.info("handlerRemoved channle group removed " + remoteAddress.getHostName() + "\t" + remoteAddress.getPort
+        log.info("[ Server ] channle group removed " + remoteAddress.getHostName() + "\t" + remoteAddress.getPort
                 ());
     }
 
@@ -228,11 +255,11 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        channelGroup.remove(ctx.channel());
         ctx.close();
         cause.printStackTrace();
-        log.info("exceptionCaught channle group removed " + remoteAddress.getHostName() + "\t" + remoteAddress
-                .getPort());
+    }
+
+    public void stop() {
+        this.isStop = true;
     }
 }

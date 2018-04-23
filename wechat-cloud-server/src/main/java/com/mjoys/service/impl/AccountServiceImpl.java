@@ -13,7 +13,18 @@ import java.util.List;
 
 @Service
 public class AccountServiceImpl implements IAccountService {
+
     @Autowired
     private AccountRepository accountRepository;
 
+
+    @Override
+    public List<Account> findByUserIdAndBussinessId(String userId, int bussinessId) {
+        return accountRepository.findByUserIdAndBussinessId(userId, bussinessId);
+    }
+
+    @Override
+    public List<Account> findByUserId(String userId) {
+        return accountRepository.findByUserIdAndStatus(userId, 1);
+    }
 }

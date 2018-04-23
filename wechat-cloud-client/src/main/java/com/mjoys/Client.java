@@ -11,8 +11,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import com.mjoys.netty.listener.ConnectionListener;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -23,10 +25,13 @@ public class Client {
     private final AtomicInteger retryTimes = new AtomicInteger();
     private int maxRetryTimes;
     private EventLoopGroup eventLoop;
+    private CustomClientInboundHandlerAdapter handler;
     private String serverIp;
     private int serverPort;
+    private final ConcurrentLinkedQueue<MessageWarp> messageQueue = new ConcurrentLinkedQueue<>();
 
     public Client start(String serverIp, int serverPort, String terminalUid, String protrait, int maxRetryTimes) {
+
         this.serverIp = serverIp;
         this.serverPort = serverPort;
         this.terminalUid = terminalUid;
@@ -48,7 +53,7 @@ public class Client {
     public Bootstrap createBootstrap(Bootstrap bootstrap, EventLoopGroup eventLoop) {
         if (bootstrap != null) {
             try {
-                CustomClientInboundHandlerAdapter handler = new CustomClientInboundHandlerAdapter(this);
+                handler = new CustomClientInboundHandlerAdapter(this);
                 bootstrap.group(eventLoop);
 
                 bootstrap.channel(NioSocketChannel.class);
@@ -86,12 +91,17 @@ public class Client {
 
     public void stop() {
         if (null != eventLoop) {
+            handler.stop();
             eventLoop.shutdownGracefully();
         }
     }
 
-    public Client send(Message msg) {
-        channel.writeAndFlush(msg);
+    public MessageWarp getMsg(){
+        return messageQueue.poll();
+    }
+    public Client submitMsg(MessageWarp warp) {
+        System.out.println("submitMsg");
+        messageQueue.add(warp);
         return this;
     }
 }
