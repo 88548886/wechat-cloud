@@ -6,4 +6,4 @@ git reset --hard;
 git pull origin master
 chmod a+x bin/*.sh
 
-mvn clean package -Dmaven.test.skip=true
+bin/deploy.sh
