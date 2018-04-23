@@ -15,11 +15,10 @@ import com.mjoys.service.impl.TaskServiceImpl;
 import com.mjoys.utils.SpringBeanUtil;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class TaskManager implements Runnable {
-    private Pattern p = Pattern.compile("\\d{11}");
+    private Pattern mobileNumPattern = Pattern.compile("^[1]\\d{10}");
     private IRedisService redisService = SpringBeanUtil.getBean(RedisServiceImpl.class);
     private ITaskService taskService = SpringBeanUtil.getBean(TaskServiceImpl.class);
     private IAccountService accountService = SpringBeanUtil.getBean(AccountServiceImpl.class);
@@ -86,7 +85,7 @@ public class TaskManager implements Runnable {
                     List<String> msgTermianlAddr = new ArrayList<>();
                     while (iterator.hasNext()) {
                         Map.Entry<String, String> next = iterator.next();
-                        if (Pattern.matches("\\d{11}", next.getKey())) {
+                        if (Pattern.matches("^[1]\\d{10}", next.getKey())) {
                             msgTermianlAddr.add(next.getValue());
                         }
                     }
