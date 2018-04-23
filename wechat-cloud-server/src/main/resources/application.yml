@@ -7,7 +7,7 @@ spring:
     password: robot@8UHB
     driver-class-name: com.mysql.jdbc.Driver
   jpa:
-    show-sql: true
+    show-sql: false
   redis:
     host: 192.168.1.113
     port: 7379
@@ -21,5 +21,3 @@ logging:
   level:
     root: error
     com.mjoys: info
-  pattern:
-    console:"%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%thread]){faint} %clr(%-40.40logger{39}){cyan} %L %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"

@@ -9,7 +9,8 @@ public class Main {
 
             InetAddress addr = InetAddress.getByName("wechat.mjoys.com");
             String hostAddress = addr.getHostAddress();
-            Client client = new Client().start(hostAddress, 8888, "15968899802", "default", 300);
+            hostAddress = "192.168.1.28";
+            Client client = new Client().start(hostAddress, 9999, "15968899802", "default", 300);
         } catch (Exception e) {
             e.printStackTrace();
         }

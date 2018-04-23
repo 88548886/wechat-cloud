@@ -3,24 +3,18 @@ package com.mjoys.netty.handler;
 import com.alibaba.fastjson.JSON;
 import com.mjoys.MessageWarp;
 import com.mjoys.SystemConstant;
-
 import com.mjoys.TaskManager;
 import com.mjoys.Terminal;
 import com.mjoys.protocol.Message;
 import com.mjoys.protocol.MessageFlag;
 import com.mjoys.protocol.MessageType;
-import com.mjoys.protocol.message.command.SendSmsMsgCommand;
-import com.mjoys.protocol.message.command.WechatAddFriendCommand;
 import com.mjoys.protocol.message.report.SendSmsMsgReport;
 import com.mjoys.protocol.message.report.WechatAddFriendReport;
 import com.mjoys.protocol.message.system.CommandExecutedAck;
 import com.mjoys.protocol.message.system.CommandReceivedAck;
 import com.mjoys.protocol.message.system.Heartbeat;
-import com.mjoys.protocol.message.system.Task;
-import com.mjoys.service.IAccountService;
 import com.mjoys.service.IRedisService;
 import com.mjoys.service.ITaskService;
-import com.mjoys.service.impl.AccountServiceImpl;
 import com.mjoys.service.impl.RedisServiceImpl;
 import com.mjoys.service.impl.TaskServiceImpl;
 import com.mjoys.utils.SpringBeanUtil;
@@ -36,10 +30,8 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -59,7 +51,6 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
                 while (!isStop) {
                     MessageWarp messageWarpWaitingProcess = taskManager.getTask();
                     if (null != messageWarpWaitingProcess) {
-                        System.out.println("消费到?" + messageWarpWaitingProcess);
                         Terminal.Addr terminalAddr = messageWarpWaitingProcess.getTerminalAddr();
                         channelGroup.writeAndFlush(messageWarpWaitingProcess.getMsg(),
                                 new MjoysChannelMatcher(String.format("%s:%d",
@@ -110,9 +101,9 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
 
     private void processSysMsg(ChannelHandlerContext ctx, Message msg) {
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        log.info("[ Server ] [ SYS ] received : " + remoteAddress.getHostName() + "\t" + remoteAddress.getPort() + " " +
-                "( " + MessageFlag.build(msg.getFlag()) + "\t" + MessageType.build(msg.getType()) + "\t" + msg
-                .getBody() + " )");
+//        log.info("[ Server ] [ SYS ] received : " + remoteAddress.getHostName() + "\t" + remoteAddress.getPort() + " " +
+//                "( " + MessageFlag.build(msg.getFlag()) + "\t" + MessageType.build(msg.getType()) + "\t" + msg
+//                .getBody() + " )");
         switch (MessageType.build(msg.getType())) {
             case SYS_HEARTBEAT:
                 Heartbeat heartbeat = JSON.parseObject(msg.getBody(), Heartbeat.class);
@@ -147,36 +138,7 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
                 break;
         }
     }
-/*
 
-    private void processTask(Message msg) {
-        Task task = JSON.parseObject(msg.getBody(), Task.class);
-        Message command = null;
-        switch (MessageType.build(task.getCommandType())) {
-            case COM_ADD_WECHAT_FRIEND:
-                command = new Message(MessageFlag.MESSAGE_FLAG_COM.getCode(),
-                        MessageType.COM_ADD_WECHAT_FRIEND.getCode(),
-                        JSON.toJSONString(new WechatAddFriendCommand(task.getId(),
-                                task.getExecuteTime(),
-                                task.getReceiver(),
-                                task.getMessage())));
-                break;
-            case COM_SEND_MSG:
-                command = new Message(MessageFlag.MESSAGE_FLAG_COM.getCode(),
-                        MessageType.COM_SEND_MSG.getCode(),
-                        JSON.toJSONString(new SendSmsMsgCommand(task.getId(),
-                                task.getExecuteTime(),
-                                task.getReceiver(),
-                                task.getMessage())));
-                break;
-            default:
-                break;
-        }
-        log.info("forward command " + MessageFlag.build(command.getFlag()) + "\t" + MessageType.build(command.getType
-                ()) + "\t" + command.getBody());
-        channelGroup.writeAndFlush(command, new MjoysChannelMatcher(task.getTerminalAddr()));
-    }
-*/
 
     class MjoysChannelMatcher implements ChannelMatcher {
         private String addr;
