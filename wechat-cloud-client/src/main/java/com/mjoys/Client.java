@@ -28,7 +28,6 @@ public class Client {
     private CustomClientInboundHandlerAdapter handler;
     private String serverIp;
     private int serverPort;
-    private final ConcurrentLinkedQueue<MessageWarp> messageQueue = new ConcurrentLinkedQueue<>();
 
     public Client start(String serverIp, int serverPort, String terminalUid, String protrait, int maxRetryTimes) {
 
@@ -87,21 +86,5 @@ public class Client {
             }
         }
         return bootstrap;
-    }
-
-    public void stop() {
-        if (null != eventLoop) {
-            handler.stop();
-            eventLoop.shutdownGracefully();
-        }
-    }
-
-    public MessageWarp getMsg(){
-        return messageQueue.poll();
-    }
-    public Client submitMsg(MessageWarp warp) {
-        System.out.println("submitMsg");
-        messageQueue.add(warp);
-        return this;
     }
 }

@@ -49,11 +49,9 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
     private ITaskService taskService = SpringBeanUtil.getBean(TaskServiceImpl.class);
 
     public static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-    private TaskManager taskManager;
     private boolean isStop;
 
     public MjoysServerInboundHandler(TaskManager taskManager) {
-        this.taskManager = taskManager;
         this.isStop = false;
         new Thread(new Runnable() {
             @Override
