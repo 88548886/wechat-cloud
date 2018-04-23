@@ -27,6 +27,7 @@ public class CustomClientInboundHandlerAdapter extends SimpleChannelInboundHandl
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("channelActive");
     }
 
 

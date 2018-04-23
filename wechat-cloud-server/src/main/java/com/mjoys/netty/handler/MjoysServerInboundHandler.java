@@ -1,10 +1,7 @@
 package com.mjoys.netty.handler;
 
 import com.alibaba.fastjson.JSON;
-import com.mjoys.MessageWarp;
-import com.mjoys.SystemConstant;
-import com.mjoys.TaskManager;
-import com.mjoys.Terminal;
+import com.mjoys.*;
 import com.mjoys.protocol.Message;
 import com.mjoys.protocol.MessageFlag;
 import com.mjoys.protocol.MessageType;
@@ -39,32 +36,19 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
 
     private IRedisService redisService = SpringBeanUtil.getBean(RedisServiceImpl.class);
     private ITaskService taskService = SpringBeanUtil.getBean(TaskServiceImpl.class);
-
+    private TaskManager taskMananger = new TaskManager();
     public static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-    private boolean isStop;
 
-    public MjoysServerInboundHandler(TaskManager taskManager) {
-        this.isStop = false;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (!isStop) {
-                    MessageWarp messageWarpWaitingProcess = taskManager.getTask();
-                    if (null != messageWarpWaitingProcess) {
-                        Terminal.Addr terminalAddr = messageWarpWaitingProcess.getTerminalAddr();
-                        channelGroup.writeAndFlush(messageWarpWaitingProcess.getMsg(),
-                                new MjoysChannelMatcher(String.format("%s:%d",
-                                        terminalAddr.getIp(),
-                                        terminalAddr.getPort())));
-                    }
-                }
-            }
-        }).start();
+    public MjoysServerInboundHandler(TaskManager taskMananger) {
+        this.taskMananger = taskMananger;
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-
+        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+        log.debug("[ Server ] received : " + remoteAddress.getHostName() + "\t" + remoteAddress.getPort() +
+                " " + "( " + MessageFlag.build(msg.getFlag()) + "\t" + MessageType.build(msg.getType()) + "\t" + msg
+                .getBody() + " )");
         switch (MessageFlag.build(msg.getFlag())) {
             case MESSAGE_FLAG_SYS:
                 processSysMsg(ctx, msg);
@@ -77,13 +61,19 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
             default:
                 break;
         }
+        //每次有读事件就检查任务中有没有待发的消息
+        MessageWarp messageWarpWaitingProcess = taskMananger.getTask();
+        if (null != messageWarpWaitingProcess) {
+            Terminal.Addr terminalAddr = messageWarpWaitingProcess.getTerminalAddr();
+            channelGroup.writeAndFlush(messageWarpWaitingProcess.getMsg(),
+                    new MjoysChannelMatcher(String.format("%s:%d",
+                            terminalAddr.getIp(),
+                            terminalAddr.getPort())));
+        }
+
     }
 
     private void processBusRep(ChannelHandlerContext ctx, Message msg) {
-        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        log.info("[ Server ] [ BUS ] received : " + remoteAddress.getHostName() + "\t" + remoteAddress.getPort() + " " +
-                "( " + MessageFlag.build(msg.getFlag()) + "\t" + MessageType.build(msg.getType()) + "\t" + msg
-                .getBody() + " )");
         switch (MessageType.build(msg.getType())) {
             case REP_ADD_WECHAT_FRIEND:
                 WechatAddFriendReport wechatAddFriendReport = JSON.parseObject(msg.getBody(), WechatAddFriendReport
@@ -101,9 +91,6 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
 
     private void processSysMsg(ChannelHandlerContext ctx, Message msg) {
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-//        log.info("[ Server ] [ SYS ] received : " + remoteAddress.getHostName() + "\t" + remoteAddress.getPort() + " " +
-//                "( " + MessageFlag.build(msg.getFlag()) + "\t" + MessageType.build(msg.getType()) + "\t" + msg
-//                .getBody() + " )");
         switch (MessageType.build(msg.getType())) {
             case SYS_HEARTBEAT:
                 Heartbeat heartbeat = JSON.parseObject(msg.getBody(), Heartbeat.class);
@@ -122,9 +109,6 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
                         SystemConstant.ip, SystemConstant.port));
 
                 redisService.hsetAll(String.format("wechat-cloud:client"), keyValuePairs);
-                break;
-            case SYS_TASK:
-//                processTask(msg);
                 break;
             case SYS_COMMAND_RECEIVED_ACK:
                 CommandReceivedAck commandReceivedAck = JSON.parseObject(msg.getBody(), CommandReceivedAck.class);
@@ -151,7 +135,7 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
         public boolean matches(Channel channel) {
             InetSocketAddress remoteAddress = (InetSocketAddress) channel.remoteAddress();
             if (addr.equals(String.format("%s:%d", remoteAddress.getHostName(), remoteAddress.getPort()))) {
-                log.info("forward command to " + String.format("%s:%d", remoteAddress.getHostName(), remoteAddress
+                log.debug("forward command to " + String.format("%s:%d", remoteAddress.getHostName(), remoteAddress
                         .getPort()) + " successed.");
                 return true;
             }
@@ -168,13 +152,8 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
                 InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
                 String leastHeartBeartTimestamp = redisService.hget("wechat-cloud:client",
                         String.format("heartbeat-%s-%d", remoteAddress.getHostName(), remoteAddress.getPort()));
-                System.out.println(String.format("heartbeat-%s-%d", remoteAddress.getHostName(), remoteAddress
-                        .getPort()) + " -> " + leastHeartBeartTimestamp);
-                log.info(String.format("heartbeat-%s-%d", remoteAddress.getHostName(), remoteAddress.getPort()) + " " +
-                        "-> " + leastHeartBeartTimestamp);
                 if ((System.currentTimeMillis() - Long.valueOf(leastHeartBeartTimestamp))
                         > (SystemConstant.CHANNLE_IDLE_TIME_UNIT.toMillis(SystemConstant.CHANNLE_IDLE_IIME) * 5)) {
-                    log.debug("close channel " + remoteAddress.getHostName() + ":" + remoteAddress.getPort());
                     ctx.channel().close();
                 }
             }
@@ -186,21 +165,17 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         channelGroup.add(ctx.channel());
-        log.info("[ Server ] channle group removed " + remoteAddress.getHostName() + "\t" + remoteAddress.getPort());
-
+        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         redisService.hset(String.format("wechat-cloud:client"), String.format("heartbeat-%s-%d", remoteAddress
                 .getHostName(), remoteAddress.getPort
                 ()), String.valueOf(System.currentTimeMillis()));
+
     }
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         channelGroup.remove(ctx.channel());
-        log.info("[ Server ] channle group removed " + remoteAddress.getHostName() + "\t" + remoteAddress.getPort
-                ());
     }
 
 
@@ -215,11 +190,8 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        ctx.close();
+        ctx.close().sync();
         cause.printStackTrace();
     }
 
-    public void stop() {
-        this.isStop = true;
-    }
 }

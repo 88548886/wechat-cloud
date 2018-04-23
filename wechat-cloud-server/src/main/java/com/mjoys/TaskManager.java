@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 @Slf4j
-public class TaskManager implements Runnable {
+public class TaskManager extends Thread {
     private IRedisService redisService = SpringBeanUtil.getBean(RedisServiceImpl.class);
     private ITaskService taskService = SpringBeanUtil.getBean(TaskServiceImpl.class);
     private IAccountService accountService = SpringBeanUtil.getBean(AccountServiceImpl.class);
@@ -137,7 +137,8 @@ public class TaskManager implements Runnable {
         return messageTaskQueue.poll();
     }
 
-    public void stop(){
+
+    public void interrupt(){
         if(null != es){
             es.shutdown();
         }
