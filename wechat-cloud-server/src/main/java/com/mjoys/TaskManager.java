@@ -6,6 +6,7 @@ import com.mjoys.po.Task;
 import com.mjoys.protocol.Message;
 import com.mjoys.protocol.MessageFlag;
 import com.mjoys.protocol.MessageType;
+import com.mjoys.protocol.message.command.SendSmsMsgCommand;
 import com.mjoys.protocol.message.command.WechatAddFriendCommand;
 import com.mjoys.service.IAccountService;
 import com.mjoys.service.IRedisService;
@@ -71,9 +72,18 @@ public class TaskManager implements Runnable {
                     messageWarp.setMsg(msgCommand).setTerminalAddr(addr);
                     messageTaskQueue.add(messageWarp);
 
-                } else if (MessageType.COM_ADD_WECHAT_FRIEND.getCode() == task.getOperate().intValue()) {
+                } else if (MessageType.COM_SEND_MSG.getCode() == task.getOperate().intValue()) {
                     Map<String, String> terminals = redisService.hgetAll("wechat-cloud:client");
                     Terminal.Addr addr = selectMobileTerminal(terminals);
+                    MessageWarp messageWarp = new MessageWarp();
+                    Message msgCommand = new Message(MessageFlag.MESSAGE_FLAG_COM.getCode(),
+                            MessageType.COM_SEND_MSG.getCode(),
+                            JSON.toJSONString(new SendSmsMsgCommand(task.getId(),
+                                    -1,
+                                    task.getTargerAccount(),
+                                    task.getMessage())));
+                    messageWarp.setMsg(msgCommand).setTerminalAddr(addr);
+                    messageTaskQueue.add(messageWarp);
                 }
             } catch (Exception e) {
                 log.error(e.getMessage());

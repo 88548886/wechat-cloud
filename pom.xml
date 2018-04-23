@@ -12,8 +12,6 @@
         <module>wechat-cloud-common</module>
         <module>wechat-cloud-client</module>
         <module>wechat-cloud-server</module>
-        <module>wechat-cloud-server-discovery</module>
-        <module>wechat-cloud-task-manager</module>
     </modules>
 
     <name>wechat-cloud</name>

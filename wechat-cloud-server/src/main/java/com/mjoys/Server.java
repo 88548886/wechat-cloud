@@ -68,7 +68,7 @@ public class Server {
                     }).option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
             ChannelFuture future = sbs.bind(port).sync();
             es.scheduleAtFixedRate(new Register(), 0, 1, TimeUnit.SECONDS);
-            es.submit(taskManager);
+            es.scheduleAtFixedRate(taskManager,0,30,TimeUnit.SECONDS);
             log.info("服务启动成功,监听端口" + port);
             future.channel().closeFuture().sync();
         } catch (Exception e) {
