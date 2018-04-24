@@ -1,5 +1,7 @@
 package com.mjoys;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.mjoys.netty.decoder.MjoysLengthFieldBasedFrameDecoder;
 import com.mjoys.netty.encoder.MjoysOutboundEncoder;
 import com.mjoys.netty.handler.MjoysServerInboundHandler;
@@ -58,7 +60,7 @@ public class Server {
             log.info("服务启动成功,监听端口" + port);
             channel.closeFuture().sync();
         } catch (Exception e) {
-
+            log.error(e.getMessage(),e);
         }
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override

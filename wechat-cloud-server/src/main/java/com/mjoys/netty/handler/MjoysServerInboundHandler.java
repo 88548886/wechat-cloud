@@ -1,6 +1,7 @@
 package com.mjoys.netty.handler;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.mjoys.*;
 import com.mjoys.protocol.Message;
 import com.mjoys.protocol.MessageFlag;
@@ -64,6 +65,7 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
         //每次有读事件就检查任务中有没有待发的消息
         MessageWarp messageWarpWaitingProcess = taskMananger.getTask();
         if (null != messageWarpWaitingProcess) {
+            log.info("执行消息任务:\n{}",JSON.toJSONString(messageWarpWaitingProcess, SerializerFeature.PrettyFormat));
             Terminal.Addr terminalAddr = messageWarpWaitingProcess.getTerminalAddr();
             channelGroup.writeAndFlush(messageWarpWaitingProcess.getMsg(),
                     new MjoysChannelMatcher(String.format("%s:%d",

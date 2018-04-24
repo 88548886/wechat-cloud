@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class TaskManager extends Thread {
@@ -112,21 +113,29 @@ public class TaskManager extends Thread {
     }
 
     private Terminal.Addr selectWechatTerminal(List<String> wechatTerminalAddrs) throws Exception {
-        if (null != wechatTerminalAddrs && wechatTerminalAddrs.size() > 0) {
+        List<String> enable = wechatTerminalAddrs.stream().filter(wechatTerminalAddr -> {
+            if(null != wechatTerminalAddr && !"".equals(wechatTerminalAddr)){
+                String[] addrDetail = wechatTerminalAddr.split(":");
+                long heartbeatTs = Long.parseLong(addrDetail[3]);
+                //如果超过30s
+                if (System.currentTimeMillis() - heartbeatTs < TimeUnit.SECONDS.toMillis(30)) {
+                    return true;
+                }
+            }
+            return false;
+        }).collect(Collectors.toList());
+
+        if (null != enable && enable.size() > 0) {
             Random rand = new Random();
-            for (String addr : wechatTerminalAddrs) {
-                String targetTerminal = wechatTerminalAddrs.get(rand.nextInt(wechatTerminalAddrs.size()));
-                if(null != targetTerminal && !"".equals(targetTerminal)){
-                    String[] addrDetail = targetTerminal.split(":");
-                    //eg.  wxid1:192.168.1.28:40378:1524460570696
-                    String terminalUid = addrDetail[0];
-                    String ip = addrDetail[1];
-                    int port = Integer.parseInt(addrDetail[2]);
-                    long heartbeatTs = Long.parseLong(addrDetail[3]);
-                    //如果超过30s
-                    if (System.currentTimeMillis() - heartbeatTs < TimeUnit.SECONDS.toMillis(30)) {
-                        return new Terminal.Addr().setIp(ip).setPort(port);
-                    }
+            String targetTerminal = enable.get(rand.nextInt(enable.size()));
+            if(null != targetTerminal && !"".equals(targetTerminal)){
+                String[] addrDetail = targetTerminal.split(":");
+                String ip = addrDetail[1];
+                int port = Integer.parseInt(addrDetail[2]);
+                long heartbeatTs = Long.parseLong(addrDetail[3]);
+                //如果超过30s
+                if (System.currentTimeMillis() - heartbeatTs < TimeUnit.SECONDS.toMillis(30)) {
+                    return new Terminal.Addr().setIp(ip).setPort(port);
                 }
             }
         }
