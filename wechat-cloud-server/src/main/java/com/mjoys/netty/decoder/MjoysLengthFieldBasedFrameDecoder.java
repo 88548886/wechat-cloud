@@ -38,14 +38,13 @@ public class MjoysLengthFieldBasedFrameDecoder extends LengthFieldBasedFrameDeco
         int flag = in.readInt();
         int type = in.readInt();
         int length = in.readInt();
+        if (in.readableBytes() < length) {
+            throw new Exception("body length less than length declared in header");
+        }
         ByteBuf buf = in.readBytes(length);
         byte[] req = new byte[buf.readableBytes()];
         buf.readBytes(req);
         String body = new String(req, "UTF-8");
-        if (in.readableBytes() < length) {
-            log.error("chanel: {} 收到非法包体 : {}",ctx.channel(),body);
-            throw new Exception("body length less than length declared in header");
-        }
         Message msg = new Message(flag, type, body);
         return msg;
     }
