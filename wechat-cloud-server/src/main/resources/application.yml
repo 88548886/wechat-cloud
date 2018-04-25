@@ -20,4 +20,5 @@ logging:
   file: logs/${spring.application.name}.log
   level:
     root: error
-    com.mjoys: info
+    com.mjoys: debug
+    io.netty: debug
