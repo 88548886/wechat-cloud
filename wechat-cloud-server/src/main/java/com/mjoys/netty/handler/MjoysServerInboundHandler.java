@@ -2,7 +2,10 @@ package com.mjoys.netty.handler;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
-import com.mjoys.*;
+import com.mjoys.MessageWarp;
+import com.mjoys.SystemConstant;
+import com.mjoys.TaskManager;
+import com.mjoys.Terminal;
 import com.mjoys.protocol.Message;
 import com.mjoys.protocol.MessageFlag;
 import com.mjoys.protocol.MessageType;
@@ -118,7 +121,7 @@ public class MjoysServerInboundHandler extends SimpleChannelInboundHandler<Messa
                 break;
             case SYS_COMMAND_EXECUTED_ACK:
                 CommandExecutedAck commandExecutedAck = JSON.parseObject(msg.getBody(), CommandExecutedAck.class);
-                taskService.markTaskAsExecuted(commandExecutedAck.getCommandId());
+                taskService.markTaskAsExecuted(commandExecutedAck);
                 break;
             default:
                 break;

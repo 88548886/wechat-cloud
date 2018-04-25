@@ -2,6 +2,7 @@ package com.mjoys.service.impl;
 
 import com.mjoys.dao.TaskRepository;
 import com.mjoys.po.Task;
+import com.mjoys.protocol.message.system.CommandExecutedAck;
 import com.mjoys.service.ITaskService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,10 +31,11 @@ public class TaskServiceImpl implements ITaskService {
 
     @Override
     @Transactional
-    public void markTaskAsExecuted(int taskId) {
-        Task task = taskRepository.getOne(taskId);
+    public void markTaskAsExecuted(CommandExecutedAck commandExecutedAck) {
+        Task task = taskRepository.getOne(commandExecutedAck.getCommandId());
         if(null != task){
             task.setActionExecutionStatus(Task.ACTION_EXECUTION_STATUS_SUCCESSED);
+            task.setWxAccountId(commandExecutedAck.getTerminalUid());
             task.setTimeModified(new Date());
             taskRepository.save(task);
         }
@@ -57,4 +59,5 @@ public class TaskServiceImpl implements ITaskService {
     public List<Task> findAllByActionSubmitStatus(int actionSubmitStatus) {
         return taskRepository.findAllByActionSubmitStatus(actionSubmitStatus);
     }
+
 }
