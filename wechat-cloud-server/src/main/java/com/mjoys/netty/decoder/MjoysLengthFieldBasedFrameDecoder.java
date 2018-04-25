@@ -29,20 +29,19 @@ public class MjoysLengthFieldBasedFrameDecoder extends LengthFieldBasedFrameDeco
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        ByteBuf result = (ByteBuf) super.decode(ctx,in);
-        if (result == null) {
+        if (in == null) {
             return null;
         }
-        if (result.readableBytes() < HEADER_SIZE) {
+        if (in.readableBytes() < HEADER_SIZE) {
             throw new Exception("readable bytes length less than header size");
         }
-        int flag = result.readInt();
-        int type = result.readInt();
-        int length = result.readInt();
-        if (result.readableBytes() < length) {
+        int flag = in.readInt();
+        int type = in.readInt();
+        int length = in.readInt();
+        if (in.readableBytes() < length) {
             throw new Exception("body length less than length declared in header");
         }
-        ByteBuf buf = result.readBytes(length);
+        ByteBuf buf = in.readBytes(length);
         byte[] req = new byte[buf.readableBytes()];
         buf.readBytes(req);
         String body = new String(req, "UTF-8");
