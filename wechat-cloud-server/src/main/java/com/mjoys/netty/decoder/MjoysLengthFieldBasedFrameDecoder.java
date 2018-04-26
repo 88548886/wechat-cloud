@@ -33,13 +33,15 @@ public class MjoysLengthFieldBasedFrameDecoder extends LengthFieldBasedFrameDeco
             return null;
         }
         if (in.readableBytes() < HEADER_SIZE) {
-            throw new Exception("readable bytes length less than header size");
+            log.info("readable bytes length less than header size");
+            return null;
         }
         int flag = in.readInt();
         int type = in.readInt();
         int length = in.readInt();
         if (in.readableBytes() < length) {
-            throw new Exception("body length less than length declared in header");
+            log.info("body length less than length declared in header");
+            return null;
         }
         ByteBuf buf = in.readBytes(length);
         byte[] req = new byte[buf.readableBytes()];
